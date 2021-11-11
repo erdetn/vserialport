@@ -21,10 +21,11 @@ pub enum Mode { // C.sp_mode
 	read_write = C.SP_MODE_READ_WRITE
 }
 
+[flag]
 pub enum Event { // C.sp_event
-	received_ready = C.SP_EVENT_RX_READY
-	transmit_ready = C.SP_EVENT_TX_READY
-	event_error    = C.SP_EVENT_ERROR
+	received_ready = 1
+	transmit_ready = 2
+	event_error    = 4
 }
 
 pub enum Buffer { // C.sp_buffer
@@ -101,18 +102,6 @@ pub struct Port {
 mut:
 	port_name  string
 	ptr 	  &C.sp_port
-}
-
-struct C.sp_port_config{}
-pub struct PortConfiguration{
-	ptr &C.sp_port_config
-}
-
-struct C.sp_event_set {
-	void *handles;
-	handles voidptr
-	masks   &C.Event
-	count   u32
 }
 
 fn C.sp_get_port_by_name(portname &char, port_ptr &&C.sp_port) C.sp_return
@@ -244,14 +233,29 @@ pub fn (this Port)bluetooth_address() string {
 }
 
 fn C.sp_get_port_handle(port &C.sp_port, result_ptr voidptr) C.sp_return
-
-fn C.sp_new_config(&&C.sp_port_config) C.sp_return
-
-fn C.sp_free_config(&C.sp_port_config)
-
-fn C.sp_get_config(port &C.sp_port, config &C.sp_port_config) C.sp_return
-
-fn C.sp_set_config(port &C.sp_port, config &C.sp_port_config) C.sp_return
+$if windows {
+	pub fn (this Port)handler() ?voidptr {
+		h := voidptr(0)
+		rc := unsafe {
+			C.sp_get_port_handle(this.ptr, &h)
+		}
+		if rc != C.sp_return(C.SP_OK) {
+			return error('Error ${int(rc)}. Failed to get port handler.')
+		}
+		return h
+	}
+} else {
+	pub fn (this Port)handler() ?int {
+		h := int(0)
+		rc := unsafe {
+			C.sp_get_port_handle(this.ptr, &h)
+		}
+		if rc != C.sp_return(C.SP_OK) {
+			return error('Error ${int(rc)}. Failed to get port handler.')
+		}
+		return h
+	}
+}
 
 fn C.sp_set_baudrate(port &C.sp_port, baudrate int) C.sp_return
 pub fn (mut this Port)set_baudrate(baudrate int) bool {
@@ -259,61 +263,59 @@ pub fn (mut this Port)set_baudrate(baudrate int) bool {
 	return rc == C.sp_return(C.SP_OK)
 }
 
-fn C.sp_get_config_baudrate(config &C.sp_port_config, baudrate_ptr &int) C.sp_return
-
-fn C.sp_set_config_baudrate(config &C.sp_port_config, baudrate int) C.sp_return
-
 fn C.sp_set_bits(port &C.sp_port, bits int) C.sp_return
-
-fn C.sp_get_config_bits(config &C.sp_port_config, bits_ptr &int) C.sp_return
-
-fn C.sp_set_config_bits(config &C.sp_port_config, bits int) C.sp_return
+pub fn (this Port)set_bits(bits int) bool {
+	rc := C.sp_set_bits(this.ptr, bits)
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_set_parity(port &C.sp_port, parity C.sp_parity) C.sp_return
-
-fn C.sp_get_config_parity(config &C.sp_port_config, parity_ptr &C.sp_parity) C.sp_return
-
-fn C.sp_set_config_parity(config &C.sp_port_config, parity C.sp_parity) C.sp_return
+pub fn (this Port)set_parity(parity Parity) bool {
+	rc := C.sp_set_parity(this.ptr, C.sp_parity(parity))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_set_stopbits(port &C.sp_port, stopbits int) C.sp_return
+pub fn (this Port)set_stopbits(stopbits int) bool {
+	rc := C.sp_set_stopbits(this.ptr, stopbits)
+	return rc == C.sp_return(C.SP_OK)
+}
 
-fn C.sp_get_config_stopbits(config &C.sp_port_config, stopbits_ptr &int) C.sp_return
-
-fn C.sp_set_config_stopbits(config &C.sp_port_config, stopbits int) C.sp_return
-
-fn C.sp_set_rts(port &C.sp_port, enum sp_rts rts) C.sp_return
-
-fn C.sp_get_config_rts(config &C.sp_port_config, rts_ptr &C.sp_rts) C.sp_return
-
-fn C.sp_set_config_rts(config &C.sp_port_config, rts C.sp_rts) C.sp_return
+fn C.sp_set_rts(port &C.sp_port, rts C.sp_rts) C.sp_return
+pub fn (this Port)set_rts(rts Rts) bool {
+	rc := C.sp_set_rts(this.ptr, C.sp_rts(rts))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_set_cts(port &C.sp_port, cts C.sp_cts) C.sp_return
-
-fn C.sp_get_config_cts(config &C.sp_port_config, cts_ptr &C.sp_cts) C.sp_return
-
-fn C.sp_set_config_cts(config &C.sp_port_config, cts C.sp_cts) C.sp_return
+pub fn (this Port)set_cts(cts Cts) bool {
+	rc := C.sp_set_cts(this.ptr, C.sp_cts(cts))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_set_dtr(port &C.sp_port, dtr C.sp_dtr) C.sp_return
-
-fn C.sp_get_config_dtr(config &C.sp_port_config, dtr_ptr &C.sp_dtr) C.sp_return
-
-fn C.sp_set_config_dtr(config &C.sp_port_config, dtr C.sp_dtr) C.sp_return
+pub fn (this Port)set_dtr(dtr Dtr) bool {
+	rc := C.sp_set_dtr(this.ptr, C.sp_dtr(dtr))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_set_dsr(port &C.sp_port, dsr C.sp_dsr) C.sp_return
-
-fn C.sp_get_config_dsr(config &C.sp_port_config, dsr_ptr &C.sp_dsr) C.sp_return
-
-fn C.sp_set_config_dsr(config &C.sp_port_config, dsr C.sp_dsr) C.sp_return
+pub fn (this Port)set_dsr(dsr Dsr) bool {
+	rc := C.sp_set_dsr(this.ptr, C.sp_dsr(dsr))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_set_xon_xoff(port &C.sp_port, xon_xoff C.sp_xonxoff) C.sp_return
+pub fn (this Port)set_xon_xoff(xon_xoff XonXoff) bool {
+	rc := C.sp_set_xon_xoff(this.ptr, XonXoff(xon_xoff))
+	return rc == C.sp_return(C.SP_OK)
+}
 
-fn C.sp_get_config_xon_xoff(config &C.sp_port_config, xon_xoff_ptr &C.sp_xonxoff) C.sp_return
-
-fn C.sp_set_config_xon_xoff(config &C.sp_port_config, xon_xoff &C.sp_xonxoff) C.sp_return
-
-fn C.sp_set_config_flowcontrol(config &C.sp_port_config, flowcontrol C.sp_flowcontrol) C.sp_return
-
-fn C.p_set_flowcontrol(port &C.sp_port, flowcontrol C.sp_flowcontrol) C.sp_return
+fn C.sp_set_flowcontrol(port &C.sp_port, flowcontrol C.sp_flowcontrol) C.sp_return
+pub fn (this Port)set_flowcontrol(flow_control FlowControl) bool {
+	rc := C.sp_set_flowcontrol(this.ptr, C.sp_flowcontrol(flow_control))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_blocking_read(port &C.sp_port, buf voidptr, count C.size_t, timeout_ms u32) C.sp_return
 
@@ -322,51 +324,301 @@ fn C.sp_blocking_read_next(port &C.sp_port, buf voidptr, count C.size_t, timeout
 fn C.sp_nonblocking_read(port &C.sp_port, buf voidptr, count C.size_t) C.sp_return
 
 fn C.sp_blocking_write(port &C.sp_port, buf voidptr, count C.size_t, timeout_ms u32) C.sp_return
-
 fn C.sp_nonblocking_write(port &C.sp_port, buf voidptr, count C.size_t) C.sp_return
+pub fn (this Port)write(block bool, buffer []byte, timeout_ms u32) ?int {
+	mut rc := int(0)
+
+	if buffer.len == 0 {
+		return error('Error: empty buffer.')
+	}
+	if block == true {
+		rc = unsafe {
+			int(C.sp_blocking_write(this.ptr, &buffer[0], buffer.len, timeout_ms))
+		}
+		if rc < 0 {
+			return error('Error ${rc}. Failed to write.')
+		}
+		return rc
+	}
+	rc = unsafe {
+		int(C.sp_nonblocking_write(this.ptr, &buffer[0], buffer.len))
+	}
+	if rc < 0 {
+		return error('Error ${rc}. Failed to write.')
+	}
+	return rc
+}
+
 
 fn C.sp_input_waiting(port &C.sp_port) C.sp_return
+pub fn (this Port)bytes_to_read() int {
+	return int(C.sp_input_waiting(this.ptr))
+}
 
 fn C.sp_output_waiting(port &C.sp_port) C.sp_return
+pub fn (this Port)bytes_to_write() int {
+	return int(C.sp_output_waiting(this.ptr))
+}
 
 fn C.sp_flush(port &C.sp_port, buffers C.sp_buffer) C.sp_return
+pub fn (this Port)flush(buffer Buffer) bool {
+	rc := C.sp_flush(this.ptr, C.sp_buffer(buffer))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_drain(port &C.sp_port) C.sp_return
-
-fn C.sp_new_event_set(result_ptr &&C.sp_event_set) C.sp_return
-
-fn C.sp_add_port_events(event_set &C.sp_event_set, port &C.sp_port, mask C.sp_event) C.sp_retur
-
-fn C.sp_wait(event_set &C.sp_event_set, timeout_ms u32) C.sp_return
-
-fn C.sp_free_event_set(event_set &C.sp_event_set)
+pub fn (this Port)drain() bool {
+	rc := C.sp_drain(this.ptr)
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_get_signals(port &C.sp_port, signal_mask &C.sp_signal) C.sp_return
+pub fn (this Port)signal() ?Signal{
+	csig := C.sp_signal(0)
+	rc := unsafe {
+		C.sp_get_signals(this.ptr, &csig)
+	}
+
+	if rc != C.sp_return(C.SP_OK) {
+		errno := int(rc)
+		return error('Error ${errno}. Failed to get signals.')
+	}
+	return Signal(csig)
+}
 
 fn C.sp_start_break(port &C.sp_port) C.sp_return
+pub fn (this Port)start_break() bool {
+	rc := C.sp_start_break()
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_end_break(port &C.sp_port) C.sp_return
+pub fn (this Port)end_break() bool {
+	rc := C.sp_end_break(this.ptr)
+	return rc == C.sp_return(C.SP_OK)
+}
+
+//                
+// Error handling
+// 
 
 fn C.sp_last_error_code() int
+pub fn error_code() int {
+	return C.sp_last_error_code()
+}
 
-fn C.sp_last_error_message() &chare
+fn C.sp_last_error_message() &char
+pub fn error_message() string {
+	cstr := unsafe {
+		C.sp_last_error_message()
+	}
+	return cstr
+}
 
 fn C.sp_free_error_message(message &char)
 
-// fn C.sp_set_debug_handler(void (*handler)(char *format, ...));
-
 fn C.sp_get_major_package_version() int
+pub fn major_version() int {
+	return C.sp_get_major_package_version()
+}
+
+//
+// Version
+// 
 
 fn C.sp_get_minor_package_version() int
+pub fn minor_version() int {
+	return C.sp_get_minor_package_version()
+}
 
 fn C.sp_get_micro_package_version() int
+pub fn micro_version() int {
+	return C.sp_get_micro_package_version()
+}
 
 fn C.sp_get_package_version_string() &char
+pub fn package_version() string {
+	cstr := unsafe {
+		cstring_to_vstring(C.sp_get_package_version_string())
+	}
+	return cstr
+}
 
 fn C.sp_get_current_lib_version() int
+[inline]
+pub fn current_lib_version() int {
+	return C.sp_get_current_lib_version()
+}
 
 fn C.sp_get_revision_lib_version() int
+[inline]
+pub fn revision_lib_version() int {
+	return C.sp_get_revision_lib_version()
+}
 
 fn C.sp_get_age_lib_version() int
+[inline]
+pub fn age_lib_version() int {
+	return C.sp_get_age_lib_version()
+}
 
 fn C.sp_get_lib_version_string() &char
+pub fn version() string {
+	mut cstr := unsafe {
+		cstring_to_vstring(C.sp_get_lib_version_string())
+	}
+	cstr = "libserialport: " + cstr
+	return cstr
+}
+
+//
+// PortConfiguration
+//
+
+struct C.sp_port_config{}
+pub struct Configuration{
+	ptr &C.sp_port_config
+}
+
+fn C.sp_new_config(&&C.sp_port_config) C.sp_return
+pub fn new_configuration() ?Configuration {
+	this := Configuration{}
+	rc := unsafe {
+		C.sp_new_config(&this.ptr)
+	}
+	if rc != C.sp_return(C.SP_OK) {
+		return error('Failed to create new serial port Configuration')
+	}
+	return this
+}
+
+fn C.sp_free_config(&C.sp_port_config)
+pub fn (this Configuration)free() {
+	C.sp_free_config(this.ptr)
+}
+
+fn C.sp_get_config(port &C.sp_port, config &C.sp_port_config) C.sp_return
+pub fn (this Configuration)get(port Port) bool {
+	rc := C.sp_get_config(port.ptr, this.ptr)
+	return rc == C.sp_return(C.SP_OK)
+}
+
+fn C.sp_set_config(port &C.sp_port, config &C.sp_port_config) C.sp_return
+pub fn (this Configuration)set(port Port) bool {
+	rc := C.sp_set_config(port.ptr, this.ptr)
+	return rc == C.sp_return(C.SP_OK)
+}
+
+fn C.sp_get_config_baudrate(config &C.sp_port_config, baudrate_ptr &int) C.sp_return
+pub fn (this Configuration)baudrate() int {
+	br := int(0)
+	unsafe {
+		C.sp_get_config_baudrate(this.ptr, &br)
+	}
+	return br
+}
+
+fn C.sp_set_config_baudrate(config &C.sp_port_config, baudrate int) C.sp_return
+pub fn (this Configuration)set_baudrate(baudrate int) bool {
+	rc := C.sp_set_config_baudrate(this.ptr, baudrate)
+	return rc == C.sp_return(C.SP_OK)
+}
+
+fn C.sp_get_config_bits(config &C.sp_port_config, bits_ptr &int) C.sp_return
+pub fn (this Configuration)bits() int {
+	bits := int(0)
+	unsafe {
+		C.sp_get_config_bits(thisa.ptr, &bits)
+	}
+	return bits
+}
+
+fn C.sp_set_config_bits(config &C.sp_port_config, bits int) C.sp_return
+pub fn (this Configuration)set_bits(bits int) bool {
+	rc := C.sp_set_config_bits(this.ptr, bits)
+	return rc == C.sp_return(C.SP_OK)
+}
+
+fn C.sp_get_config_parity(config &C.sp_port_config, parity_ptr &C.sp_parity) C.sp_return
+pub fn (this Configuration)parity() Parity {
+	prt := C.sp_parity(0)
+	unsafe {
+		C.sp_get_config_parity(this.ptr, &ptr)
+	}
+	return Parity(ptr)
+}
+
+fn C.sp_set_config_parity(config &C.sp_port_config, parity C.sp_parity) C.sp_return
+pub fn (this Configuration)set_parity(parity Parity) bool {
+	rc := C.sp_set_config_parity(this.ptr, C.sp_parity(parity))
+	return rc == C.sp_return(C.SP_OK)
+}
+
+fn C.sp_get_config_stopbits(config &C.sp_port_config, stopbits_ptr &int) C.sp_return
+
+fn C.sp_set_config_stopbits(config &C.sp_port_config, stopbits int) C.sp_return
+
+fn C.sp_get_config_rts(config &C.sp_port_config, rts_ptr &C.sp_rts) C.sp_return
+
+fn C.sp_set_config_rts(config &C.sp_port_config, rts C.sp_rts) C.sp_return
+
+fn C.sp_get_config_cts(config &C.sp_port_config, cts_ptr &C.sp_cts) C.sp_return
+
+fn C.sp_set_config_cts(config &C.sp_port_config, cts C.sp_cts) C.sp_return
+
+fn C.sp_get_config_dsr(config &C.sp_port_config, dsr_ptr &C.sp_dsr) C.sp_return
+
+fn C.sp_set_config_dsr(config &C.sp_port_config, dsr C.sp_dsr) C.sp_return
+
+fn C.sp_get_config_dtr(config &C.sp_port_config, dtr_ptr &C.sp_dtr) C.sp_return
+
+fn C.sp_set_config_dtr(config &C.sp_port_config, dtr C.sp_dtr) C.sp_return
+
+fn C.sp_get_config_xon_xoff(config &C.sp_port_config, xon_xoff_ptr &C.sp_xonxoff) C.sp_return
+
+fn C.sp_set_config_xon_xoff(config &C.sp_port_config, xon_xoff &C.sp_xonxoff) C.sp_return
+
+fn C.sp_set_config_flowcontrol(config &C.sp_port_config, flowcontrol C.sp_flowcontrol) C.sp_return
+
+//
+// EventSet
+//
+
+struct C.sp_event_set {
+	handles voidptr
+	masks   &C.Event
+	count   u32
+}
+
+pub struct EventSet {
+	ptr &C.sp_event_set
+}
+
+fn C.sp_new_event_set(result_ptr &&C.sp_event_set) C.sp_return
+pub fn new_event_set() ?EventSet{
+	mut this := EventSet{}
+	rc := unsafe {
+		C.sp_new_event_set(&this.ptr)
+	}
+	if rc != C.sp_return(C.SP_OK) {
+		return error('Error ${int(rc)}. Failed to create new EventSet.')
+	}
+	return this
+}
+
+fn C.sp_add_port_events(event_set &C.sp_event_set, port &C.sp_port, mask C.sp_event) C.sp_return
+pub fn (this EventSet)add_port_events(port Port, event Event) bool {
+	rc := C.sp_add_port_events(this.ptr, port.ptr, C.sp_event(event))
+	return rc == C.sp_return(C.SP_OK)
+}
+
+fn C.sp_wait(event_set &C.sp_event_set, timeout_ms u32) C.sp_return
+pub fn (this EventSet)wait(timeout_ms u32) bool {
+	rc := C.sp_wait(this.ptr, timeout_ms)
+	return rc == C.sp_return(C.SP_OK)
+}
+
+fn C.sp_free_event_set(event_set &C.sp_event_set)
+pub fn (this EventSet)free() {
+	C.sp_free_event_set(this.ptr)
+}
