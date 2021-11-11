@@ -317,11 +317,57 @@ pub fn (this Port)set_flowcontrol(flow_control FlowControl) bool {
 	return rc == C.sp_return(C.SP_OK)
 }
 
+pub struct ReaderMode{
+	blocking    = 0
+	next        = 1
+	nonblocking = 2
+}
+
 fn C.sp_blocking_read(port &C.sp_port, buf voidptr, count C.size_t, timeout_ms u32) C.sp_return
-
 fn C.sp_blocking_read_next(port &C.sp_port, buf voidptr, count C.size_t, timeout_ms u32) C.sp_return
-
 fn C.sp_nonblocking_read(port &C.sp_port, buf voidptr, count C.size_t) C.sp_return
+
+pub fn (this Port)read(mode ReaderMode, max_length u32, timeout_ms u32) []byte {
+	mut rc := int(0)
+	if max_length == 0 {
+		return 0
+	}
+
+	mut buff := []byte{cap: max_length}
+	match mode {
+		.blocking {
+			rc = unsafe {
+				int(C.sp_blocking_read(this.ptr, &buff[0], C.size_t(max_length), timeout_ms))
+			}
+			if rc < 0 {
+				return []byte{}
+			}
+			buff.len = rc
+			return buff
+		}
+		.next {
+			rc = unsafe {
+				int(C.sp_blocking_read_next(this.ptr, &buff[0], C.size_t(max_length), timeout_ms))
+			}
+			if rc < 0 {
+				return []byte{}
+			}
+			buff.len = rc
+			return buff
+		}
+		.nonblocking {
+			rc = unsafe {
+				int(C.sp_nonblocking_read(this.ptr, &buff[0], C.size_t(max_length)))
+			}
+			if rc < 0 {
+				return []byte{}
+			}
+			buff.len = rc
+			return buff
+		}
+	}
+	return []byte{}
+}
 
 fn C.sp_blocking_write(port &C.sp_port, buf voidptr, count C.size_t, timeout_ms u32) C.sp_return
 fn C.sp_nonblocking_write(port &C.sp_port, buf voidptr, count C.size_t) C.sp_return
@@ -555,30 +601,100 @@ pub fn (this Configuration)set_parity(parity Parity) bool {
 }
 
 fn C.sp_get_config_stopbits(config &C.sp_port_config, stopbits_ptr &int) C.sp_return
+pub fn (this Configuration)stopbits() int {
+	sb := int(0)
+	unsafe {
+		C.sp_get_config_stopbits(this.ptr, &sb)
+	}
+	return sb
+}
 
 fn C.sp_set_config_stopbits(config &C.sp_port_config, stopbits int) C.sp_return
+pub fn (this Configuration)set_stopbits(stopbits int) bool {
+	rc := C.sp_set_config_stopbits(this.ptr, stopbits)
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_get_config_rts(config &C.sp_port_config, rts_ptr &C.sp_rts) C.sp_return
+pub fn (this Configuration)rts() Rts {
+	rts := int(0)
+	unsafe {
+		C.sp_get_config_rts(this.ptr, &rts)
+	}
+	return Rts(rts)
+}
 
 fn C.sp_set_config_rts(config &C.sp_port_config, rts C.sp_rts) C.sp_return
+pub fn (this Configuration)set_rts(rts Rts) bool {
+	rc := C.sp_set_config_rts(this.ptr, C.sp_rts(rts))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_get_config_cts(config &C.sp_port_config, cts_ptr &C.sp_cts) C.sp_return
+pub fn (this Configuration)cts() Cts {
+	cts := int(0)
+	unsafe {
+		C.sp_get_config_cts(this.ptr, &cts)
+	}
+	return Cts(cts)
+}
 
 fn C.sp_set_config_cts(config &C.sp_port_config, cts C.sp_cts) C.sp_return
+pub fn (this Configuration)set_cts(cts Cts) bool {
+	rc := C.sp_set_config_cts(this.ptr, C.sp_cts(cts))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_get_config_dsr(config &C.sp_port_config, dsr_ptr &C.sp_dsr) C.sp_return
+pub fn (this Configuration)dsr() Dsr {
+	dsr := int(0)
+	unsafe {
+		C.sp_get_config_dsr(this.ptr, &dsr)
+	}
+	return Dsr(dsr)
+}
 
 fn C.sp_set_config_dsr(config &C.sp_port_config, dsr C.sp_dsr) C.sp_return
+pub fn (this Configuration)set_dsr(dsr Dsr) bool {
+	rc := C.sp_set_config_dsr(this.ptr, C.sp_dsr(dsr))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_get_config_dtr(config &C.sp_port_config, dtr_ptr &C.sp_dtr) C.sp_return
+pub fn (this Configuration)dtr() Dtr {
+	dtr := int(0)
+	unsafe {
+		C.sp_get_config_dtr(this.ptr, &dtr)
+	}
+	return Dtr(dtr)
+}
 
 fn C.sp_set_config_dtr(config &C.sp_port_config, dtr C.sp_dtr) C.sp_return
+pub fn (this Configuration)set_dtr(dtr Dtr) bool {
+	rc := C.sp_set_config_dtr(this.ptr, C.sp_dtr(dtr))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_get_config_xon_xoff(config &C.sp_port_config, xon_xoff_ptr &C.sp_xonxoff) C.sp_return
+pub fn (this Configuration)xon_xoff() XonXoff {
+	xx := int(0)
+	unsafe {
+		C.sp_get_config_xon_xoff(this.ptr, &xx)
+	}
+	return XonXoff(xx)
+}
 
 fn C.sp_set_config_xon_xoff(config &C.sp_port_config, xon_xoff &C.sp_xonxoff) C.sp_return
+pub fn (this Configuration)set_xon_xoff(xon_xoff XonXoff) bool {
+	rc := C.sp_set_config_xon_xoff(this.ptr, C.sp_xonxoff(xon_xoff))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_set_config_flowcontrol(config &C.sp_port_config, flowcontrol C.sp_flowcontrol) C.sp_return
+pub fn (this Configuration)(flow_control FlowControl) bool {
+	rc := C.sp_set_config_flowcontrol(this.ptr, C.sp_flowcontrol(flow_control))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 //
 // EventSet
