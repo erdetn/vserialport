@@ -21,11 +21,10 @@ pub enum Mode { // C.sp_mode
 	read_write = C.SP_MODE_READ_WRITE
 }
 
-[flag]
 pub enum Event { // C.sp_event
-	received_ready = 1
-	transmit_ready = 2
-	event_error    = 4
+	received_ready = C.SP_EVENT_RX_READY
+	transmit_ready = C.SP_EVENT_TX_READY
+	event_error    = C.SP_EVENT_ERROR
 }
 
 pub enum Buffer { // C.sp_buffer
