@@ -98,7 +98,9 @@ pub enum Transport { // C.sp_transport
 
 struct C.sp_port{}
 pub struct Port {
-	ptr &C.sp_port
+mut:
+	port_name  string
+	ptr 	  &C.sp_port
 }
 
 struct C.sp_port_config{}
@@ -114,32 +116,132 @@ struct C.sp_event_set {
 }
 
 fn C.sp_get_port_by_name(portname &char, port_ptr &&C.sp_port) C.sp_return
+pub fn new_port(port_name string) Port {
+	mut this := Port{}
+	this.port_name = port_name
+	cfn := &char(port_name.str)
+	unsafe {
+		C.sp_get_port_by_name(cfn, &this.ptr)
+	}
+	return this
+}
 
 fn C.sp_free_port(&C.sp_port)
+pub fn (mut this Port)free() {
+	C.sp_free_port(this.ptr)
+}
 
-fn C.sp_list_ports(struct sp_port ***list_ptr);
+// fn C.sp_list_ports(struct sp_port ***list_ptr);
 
-fn C.sp_open(&C.sp_port, flags Mode) C.sp_return
+fn C.sp_open(&C.sp_port, flags C.sp_mode) C.sp_return
+pub fn (this Port)open(flags Mode) bool {
+	rc := C.sp_open(this.ptr, C.sp_mode(flags))
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_close(port &C.sp_port) C.sp_return
+pub fn (this Port)close() bool {
+	rc := C.sp_close(this.ptr)
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_get_port_name(port &C.sp_port) &char
+pub fn (this Port)name() string {
+	cpn := unsafe {
+		cstring_to_vstring(C.sp_get_port_name(this.ptr))
+	}
+	return cpn
+}
 
 fn C.sp_get_port_description(port &C.sp_port) &char
+pub fn (this Port)description() string {
+	cpd := unsafe {
+		cstring_to_vstring(C.sp_get_port_description(this.ptr))
+	}
+}
 
 fn C.sp_get_port_transport(port &C.sp_port) C.sp_transport
+pub fn (this Port)transport() Transport {
+	pt := Transport(C.sp_get_port_transport(this.ptr))
+	return pt
+}
+
+pub struct UsbBus {
+	usb_bus     int
+	usb_address int
+}
 
 fn C.sp_get_port_usb_bus_address(port &C.sp_port, usb_bus &int, usb_address &int) C.sp_return
+pub fn (this Port)usb_bus() UsbBus {
+	ub := int(0)
+	ua := int(0)
+	rc := unsafe {
+		C.sp_get_port_usb_bus_address(this.ptr, &ub, &ua)
+	}
+
+	if rc != C.sp_return(C.SP_OK) {
+		return UsbBus{0, 0}
+	}
+
+	return UsbBus{
+		usb_bus:     ub,
+		usb_address: ua
+	}
+}
+
+pub struct UsbID {
+	vendor_id  int
+	product_id int
+}
 
 fn C.sp_get_port_usb_vid_pid(port &C.sp_port, usb_vid &int, usb_pid &int) C.sp_return
+pub fn (this Port)usb_id() UsbID {
+	vid := int(0)
+	pid := int(0)
+	rc := unsafe {
+		C.sp_get_port_usb_vid_pid(this.ptr, &vid, &pid)
+	}
+	
+	if rc != C.sp_return(C.SP_OK) {
+		return UsbID{0, 0}
+	}
+	return UsbID{
+		vendor_id:  vid
+		product_id: pid
+	}
+}
 
 fn C.sp_get_port_usb_manufacturer(port &C.sp_port) &char
+pub fn (this Port)usb_manufacturer() string {
+	cstr := unsafe {
+		cstring_to_vstring(C.sp_get_port_usb_manufacturer(this.ptr))
+	}
+	return cstr
+}
 
 fn C.sp_get_port_usb_product(port &C.sp_port) &char
+pub fn (this Port)usb_product() string {
+	cstr := unsafe {
+		cstring_to_vstring(C.sp_get_port_usb_product(this.ptr))
+	}
+	return cstr
+}
 
 fn C.sp_get_port_usb_serial(port &C.sp_port) &char
+pub fn (this Port)usb_serial_number() string {
+	cstr := unsafe {
+		cstring_to_vstring(C.sp_get_port_usb_serial(this.ptr))
+	}
+	return cstr
+}
 
 fn C.sp_get_port_bluetooth_address(port &C.sp_port) &char
+pub fn (this Port)bluetooth_address() string {
+	cstr := unsafe {
+		cstring_to_vstring(C.sp_get_port_bluetooth_address(this.ptr))
+	}
+	return cstr
+}
 
 fn C.sp_get_port_handle(port &C.sp_port, result_ptr voidptr) C.sp_return
 
@@ -152,6 +254,10 @@ fn C.sp_get_config(port &C.sp_port, config &C.sp_port_config) C.sp_return
 fn C.sp_set_config(port &C.sp_port, config &C.sp_port_config) C.sp_return
 
 fn C.sp_set_baudrate(port &C.sp_port, baudrate int) C.sp_return
+pub fn (mut this Port)set_baudrate(baudrate int) bool {
+	rc := C.sp_set_baudrate(this.ptr, baudrate)
+	return rc == C.sp_return(C.SP_OK)
+}
 
 fn C.sp_get_config_baudrate(config &C.sp_port_config, baudrate_ptr &int) C.sp_return
 
