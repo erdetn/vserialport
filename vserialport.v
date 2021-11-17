@@ -1,6 +1,8 @@
 // Copyright(C) 2021 Erdet Nasufi. All rights reserved.
 
-module vsp
+module vserialport
+
+#pkgconfig --libs --cflags libserialport
 
 #include <libserialport.h>
 
@@ -104,15 +106,20 @@ mut:
 }
 
 fn C.sp_get_port_by_name(portname &char, port_ptr &&C.sp_port) Return
-pub fn new_port(port_name string) Port {
+pub fn new_port(port_name string) ?Port {
 	mut this := Port{
 		ptr: voidptr(0)
 	}
 	this.port_name = port_name
 	cfn := &char(port_name.str)
-	unsafe {
-		C.sp_get_port_by_name(cfn, &this.ptr)
+	rc := unsafe {
+		C.sp_get_port_by_name(cfn, &(this.ptr))
 	}
+
+	if rc != Return(C.SP_OK) {
+		return error('Failed to create new Port by name \'${port_name}\'. Error: ${int(rc)}')
+	}
+
 	return this
 }
 
@@ -162,6 +169,13 @@ pub struct UsbBus {
 	usb_address int
 }
 
+pub fn (this UsbBus)str() string {
+	ub := this.usb_bus
+	ua := this.usb_address
+	str := '{usb_bus: ${ub}, usb_address: ${ua}}'
+	return str
+}
+
 fn C.sp_get_port_usb_bus_address(port &C.sp_port, usb_bus &int, usb_address &int) Return
 pub fn (this Port)usb_bus() UsbBus {
 	ub := int(0)
@@ -183,6 +197,13 @@ pub fn (this Port)usb_bus() UsbBus {
 pub struct UsbID {
 	vendor_id  int
 	product_id int
+}
+
+pub fn (this UsbID)str() string {
+	vid := this.vendor_id
+	pid := this.product_id
+	str := '{vendor_id: 0x${vid.hex()}, product_id = 0x${pid.hex()}}'
+	return str
 }
 
 fn C.sp_get_port_usb_vid_pid(port &C.sp_port, usb_vid &int, usb_pid &int) Return
