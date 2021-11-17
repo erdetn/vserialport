@@ -4,6 +4,8 @@
 *.c
 playground/*.c
 playground/*.h
+sockat/*
+sockat
 
 # Unignore all with extensions
 !*.*
