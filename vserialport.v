@@ -101,8 +101,9 @@ pub enum Transport { // Transport
 struct C.sp_port{}
 pub struct Port {
 mut:
-	port_name  string
-	ptr 	  &C.sp_port
+	port_name      string
+	ptr 	      &C.sp_port
+	is_connected   bool
 }
 
 fn C.sp_get_port_by_name(portname &char, port_ptr &&C.sp_port) Return
@@ -128,12 +129,15 @@ pub fn (mut this Port)free() {
 	C.sp_free_port(this.ptr)
 }
 
-// fn C.sp_list_ports(struct sp_port ***list_ptr)
-
 fn C.sp_open(port &C.sp_port, flags Mode) Return
-pub fn (this Port)open(flags Mode) bool {
+pub fn (mut this Port)open(flags Mode) bool {
 	rc := C.sp_open(this.ptr, Mode(flags))
-	return rc == Return(C.SP_OK)
+	this.is_connected = rc == Return(C.SP_OK) 
+	return  this.is_connected
+}
+
+pub fn (this Port)is_connected() bool {
+	return this.is_connected
 }
 
 fn C.sp_close(port &C.sp_port) Return

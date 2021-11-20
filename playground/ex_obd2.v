@@ -39,6 +39,8 @@ fn main() {
 		}
 	}
 
+	println('obd2 port is connected = ${obd2.is_connected()}')
+
 	mut rc := int(0)
 	if obd2.open(vserialport.Mode.read_write) == false {
 		code := vserialport.error_code()
@@ -46,7 +48,8 @@ fn main() {
 		println('>> [${code}]: ${msg}')
 		obd2.free()
 	}
-
+	println('obd2 port is connected = ${obd2.is_connected()}')
+	
 	println('Port is open')
 
 	rc = obd2.write(false, 'ATZ\r'.bytes(), 0) or {
