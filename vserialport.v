@@ -331,7 +331,7 @@ pub fn (this Port)read(mode ReaderMode, max_length u32, timeout_ms u32) []byte {
 		return []byte{}
 	}
 
-	mut buff := []byte{cap: int(max_length)}
+	mut buff := []byte{len: int(max_length), cap: int(max_length)}
 	match mode {
 		.blocking {
 			rc = unsafe {
