@@ -421,8 +421,8 @@ pub fn (this Port)signal() ?Signal{
 	}
 
 	if rc != Return(C.SP_OK) {
-		errno := int(rc)
-		return error('Error ${errno}. Failed to get signals.')
+		err_rc := int(rc)
+		return error('Error ${err_rc}. Failed to get signals.')
 	}
 	return Signal(csig)
 }
