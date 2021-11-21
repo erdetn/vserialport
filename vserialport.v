@@ -9,7 +9,7 @@ module vserialport
 #flag -I /usr/include
 #flag -l serialport
 
-pub enum Return { // C.sp _ return
+pub enum Return {
 	ok                = C.SP_OK
 	invalid_arguments = C.SP_ERR_ARG
 	fail 		  = C.SP_ERR_FAIL
@@ -17,25 +17,25 @@ pub enum Return { // C.sp _ return
 	not_supported     = C.SP_ERR_SUPP
 }
 
-pub enum Mode { // Mode
+pub enum Mode {
 	read       = C.SP_MODE_READ
 	write      = C.SP_MODE_WRITE
 	read_write = C.SP_MODE_READ_WRITE
 }
 
-pub enum Event { // Event
+pub enum Event {
 	received_ready = C.SP_EVENT_RX_READY
 	transmit_ready = C.SP_EVENT_TX_READY
 	event_error    = C.SP_EVENT_ERROR
 }
 
-pub enum Buffer { // Buffer
+pub enum Buffer { 
 	input  = C.SP_BUF_INPUT
 	output = C.SP_BUF_OUTPUT
 	both   = C.SP_BUF_BOTH
 }
 
-pub enum Parity { // Parity
+pub enum Parity {
 	invalid = C.SP_PARITY_INVALID
 	@none   = C.SP_PARITY_NONE
 	odd     = C.SP_PARITY_ODD
@@ -44,33 +44,33 @@ pub enum Parity { // Parity
 	space   = C.SP_PARITY_SPACE
 }
 
-pub enum Rts { // Rts
+pub enum Rts { 
 	invalid      = C.SP_RTS_INVALID
 	off          = C.SP_RTS_OFF
 	on           = C.SP_RTS_ON
 	flow_control = C.SP_RTS_FLOW_CONTROL
 }
 
-pub enum Cts { // Cts
+pub enum Cts { 
 	invalide     = C.SP_CTS_INVALID
 	ignore       = C.SP_CTS_IGNORE
 	flow_control = C.SP_CTS_FLOW_CONTROL
 }
 
-pub enum Dtr { // Dtr
+pub enum Dtr { 
 	invalide     = C.SP_DTR_INVALID
 	off          = C.SP_DTR_OFF
 	on           = C.SP_DTR_ON
 	flow_control = C.SP_DTR_FLOW_CONTROL
 }
 
-pub enum Dsr { // Dsr
+pub enum Dsr { 
 	invalide     = C.SP_DSR_INVALID
 	ignore       = C.SP_DSR_IGNORE
 	flow_control = C.SP_DSR_FLOW_CONTROL
 }
 
-pub enum XonXoff { // XonXoff
+pub enum XonXoff { 
 	invalide    = C.SP_XONXOFF_INVALID
 	disabled    = C.SP_XONXOFF_DISABLED
 	@in	    = C.SP_XONXOFF_IN
@@ -78,21 +78,21 @@ pub enum XonXoff { // XonXoff
 	inout 	    = C.SP_XONXOFF_INOUT
 }
 
-pub enum FlowControl { // FlowControl
+pub enum FlowControl { 
 	@none     = C.SP_FLOWCONTROL_NONE
 	xon_xoff  = C.SP_FLOWCONTROL_XONXOFF
 	rts_cts   = C.SP_FLOWCONTROL_RTSCTS
 	dtr_dsr   = C.SP_FLOWCONTROL_DTRDSR
 }
 
-pub enum Signal { // Signal
+pub enum Signal { 
 	cts   = C.SP_SIG_CTS
 	dsr   = C.SP_SIG_DSR
 	dcd   = C.SP_SIG_DCD
 	ri    = C.SP_SIG_RI
 }
 
-pub enum Transport { // Transport
+pub enum Transport { 
 	native    = C.SP_TRANSPORT_NATIVE
 	usb       = C.SP_TRANSPORT_USB
 	bluetooth = C.SP_TRANSPORT_BLUETOOTH
@@ -462,14 +462,14 @@ pub fn error_message() string {
 
 fn C.sp_free_error_message(message &char)
 
+//
+// Version
+// 
+
 fn C.sp_get_major_package_version() int
 pub fn major_version() int {
 	return C.sp_get_major_package_version()
 }
-
-//
-// Version
-// 
 
 fn C.sp_get_minor_package_version() int
 pub fn minor_version() int {

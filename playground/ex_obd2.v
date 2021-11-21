@@ -1,3 +1,5 @@
+// Copyright(C) 2021 Erdet Nasufi. All rights reserved.
+
 module main 
 
 import time
@@ -49,7 +51,7 @@ fn main() {
 		obd2.free()
 	}
 	println('obd2 port is connected = ${obd2.is_connected()}')
-	
+
 	println('Port is open')
 
 	rc = obd2.write(false, 'ATZ\r'.bytes(), 0) or {
